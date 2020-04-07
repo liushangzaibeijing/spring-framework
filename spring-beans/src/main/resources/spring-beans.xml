@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 从 xsi:schemaLocation中值得后缀可以看出次xml验证模式是xsd模式 -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- xml的形式声明一个需要spring容器帮我们管理的bean实例 -->
+	<bean id="worker" class="com.xiu.bean.Worker"  scope="prototype">
+		<property name="name" value="索隆" />
+	</bean>
+
+    <!-- 验证继承关系的实体bean -->
+	<bean id="parent" class="com.xiu.bean.Parent" >
+		<property name="weathy" value="100000" />
+	</bean>
+
+	<bean id="son" class="com.xiu.bean.Son" parent="parent">
+		<property name="life" value="奢侈的生活" />
+	</bean>
+
+
+</beans>
+

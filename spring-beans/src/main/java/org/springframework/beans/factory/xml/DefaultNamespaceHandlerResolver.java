@@ -115,15 +115,21 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	@Override
 	@Nullable
 	public NamespaceHandler resolve(String namespaceUri) {
+		//获取命名空间和NamespaceHandler缓存 缓存中NamespaceHandler 可能是对应的class字符串
+		//也可能是对应的NamespaceHandler实例
+		//getHandlerMappings()方法也是从缓存中获取 如果缓存中没有则加载属性文件获取
 		Map<String, Object> handlerMappings = getHandlerMappings();
+		//从缓存中获取NamspaceHandler 如果空返回空
 		Object handlerOrClassName = handlerMappings.get(namespaceUri);
 		if (handlerOrClassName == null) {
 			return null;
 		}
+		//是NamespaceHandler实例返回实例
 		else if (handlerOrClassName instanceof NamespaceHandler) {
 			return (NamespaceHandler) handlerOrClassName;
 		}
 		else {
+			//不是实例获取class 去实例化NamespaceHandler对象
 			String className = (String) handlerOrClassName;
 			try {
 				Class<?> handlerClass = ClassUtils.forName(className, this.classLoader);
@@ -131,6 +137,9 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 					throw new FatalBeanException("Class [" + className + "] for namespace [" + namespaceUri +
 							"] does not implement the [" + NamespaceHandler.class.getName() + "] interface");
 				}
+				//获取到namespaceHandler 会立马调用NamespaceHandler的init()方法
+				// 我们自定义的MyNamespaceHandler 的init()方法注册一个UserBeanDefinitionParser
+				// 来解析我们编写的user.xsd对应的标签，这样spring会根据映射关系找到UserBeanDefinitionParser去解析自定义标签
 				NamespaceHandler namespaceHandler = (NamespaceHandler) BeanUtils.instantiateClass(handlerClass);
 				namespaceHandler.init();
 				handlerMappings.put(namespaceUri, namespaceHandler);
@@ -150,7 +159,9 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 	/**
 	 * Load the specified NamespaceHandler mappings lazily.
 	 */
+	//获取HandlerMappings的缓存信息 NamespaceHandler的缓存
 	private Map<String, Object> getHandlerMappings() {
+		//从先从缓存中获取NamespaceHandler
 		Map<String, Object> handlerMappings = this.handlerMappings;
 		if (handlerMappings == null) {
 			synchronized (this) {

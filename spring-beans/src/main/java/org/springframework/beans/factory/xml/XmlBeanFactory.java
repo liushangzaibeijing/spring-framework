@@ -75,7 +75,9 @@ public class XmlBeanFactory extends DefaultListableBeanFactory {
 	 * @throws BeansException in case of loading or parsing errors
 	 */
 	public XmlBeanFactory(Resource resource, BeanFactory parentBeanFactory) throws BeansException {
+		//调用父类DefaultListableBeanFactory构造器  该类继续调用其父类AbstractAutowireCapableBeanFactory构造器
 		super(parentBeanFactory);
+		//将xml对应的resource 转换为BeanDefiniion并装载在Spring容器中
 		this.reader.loadBeanDefinitions(resource);
 	}
 

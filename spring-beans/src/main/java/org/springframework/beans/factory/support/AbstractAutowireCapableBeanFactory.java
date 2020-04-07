@@ -166,7 +166,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * Create a new AbstractAutowireCapableBeanFactory.
 	 */
 	public AbstractAutowireCapableBeanFactory() {
+		//调用其父类AbstractBeanFactory 空构造其
 		super();
+		//设置需要忽略依赖注入的接口
+		//正常情况下如果如果一个类实例 beanA依赖 另一个实例beanB 则在初始化beanA的时候 需要先初始化beanB
+		//但是ignoreDependencyInterface声明忽略其对应的beanB的时候 则beanA初始化的时候不会初始化beanB
+		//如果实例bean 实现了如下的BeanNameAware（设置BeanName）、BeanFactoryAware（设置BeanFactory）、BeanClassLoaderAware（设置BeanClassLoader）三个接口
+		//则bean 依赖的beanName、BeanFactory、BeanClassLoader属性不会去初始化 而是spring根据bean的生命周期内将对应的属性设置进去
+		//https://blog.csdn.net/wubai250/article/details/8255918 挺不错的
 		ignoreDependencyInterface(BeanNameAware.class);
 		ignoreDependencyInterface(BeanFactoryAware.class);
 		ignoreDependencyInterface(BeanClassLoaderAware.class);
@@ -176,8 +183,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * Create a new AbstractAutowireCapableBeanFactory with the given parent.
 	 * @param parentBeanFactory parent bean factory, or {@code null} if none
 	 */
+	//最终调用其爷爷类的AbstractAutowireCapableBeanFactory
 	public AbstractAutowireCapableBeanFactory(@Nullable BeanFactory parentBeanFactory) {
+        //执行相关的接口忽略注入
 		this();
+		//如果该工厂对象有父BeanFactory 则设置其父BeanFactory
 		setParentBeanFactory(parentBeanFactory);
 	}
 
@@ -452,6 +462,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * populates the bean instance, applies post-processors, etc.
 	 * @see #doCreateBean
 	 */
+	////根据RootBeanDefinition 创建对应的bean实例
 	@Override
 	protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
 			throws BeanCreationException {
@@ -461,9 +472,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		RootBeanDefinition mbdToUse = mbd;
 
-		// Make sure bean class is actually resolved at this point, and
-		// clone the bean definition in case of a dynamically resolved Class
-		// which cannot be stored in the shared merged bean definition.
+	    //填充对应的RootBeanDefinition 的BeanClass
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
@@ -472,6 +481,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Prepare method overrides.
 		try {
+			//标记BeanDefintion中的methodOverrides 不能被重载
 			mbdToUse.prepareMethodOverrides();
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -481,6 +491,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
+			//通过bean的后置处理器 返回一个代理对象而非目标对象
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -1025,8 +1036,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
 		Object bean = null;
 		if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
-			// Make sure bean class is actually resolved at this point.
+			//确保此时bean类已经被解析
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+				//获取bean的class实例
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
